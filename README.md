@@ -1,8 +1,5 @@
 # The Librarian — Work Breakdown Structure
 
-**Owner:** Solo contributor
-**Status:** Planning draft for team review
-
 ## Goal
 
 Build an MCP-accessible retrieval system that indexes our codebase first, then expands to Confluence docs and GitHub issues/PRs, surfacing the most relevant content to Claude (or any MCP client) on demand — without requiring full context to be loaded upfront. This document scopes the **MVP**: GitHub code only, end to end.
