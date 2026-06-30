@@ -1,8 +1,24 @@
 # The Librarian — Work Breakdown Structure
 
+**Owner:** Solo contributor
+**Status:** Planning draft for team review
+
 ## Goal
 
-Build an MCP-accessible retrieval system that indexes our codebase first, then expands to Confluence docs and GitHub issues/PRs, surfacing the most relevant content to Claude (or any MCP client) on demand — without requiring full context to be loaded upfront. This document scopes the **MVP**: GitHub code only, end to end.
+Build an MCP-accessible retrieval system that indexes our codebase first, then expands to Confluence docs and GitHub issues/PRs, surfacing the most relevant content to Claude (or any MCP client) on demand — without requiring full context to be loaded upfront. This document scopes the **MVP**: GitHub code only, end to end. A structural "blast radius" capability (see Stretch Goal section) is tracked separately and will be pursued if time allows.
+
+## Why this matters beyond day-to-day LLM coding
+
+It's easy to pitch this purely as "makes Claude Code better at our repos," but the more durable value is broader than that — this is institutional knowledge made queryable, and that has two distinct beneficiaries:
+
+**1. Everyday LLM-assisted development.** The obvious case: Claude (or any MCP client) can pull relevant code, docs, and discussion on demand instead of relying on what's been pasted into context or what it can find by grepping alone. This makes day-to-day AI-assisted work faster and more accurate, especially for questions that span multiple files or require background from Confluence that isn't in the repo at all.
+
+**2. Brownfield system understanding.** The less obvious but arguably higher-leverage case: this becomes a tool for working with **existing, legacy, or poorly-documented systems** — the kind of codebase where the people who wrote it have moved on, the docs are stale or scattered, and the institutional knowledge mostly lives in people's heads or buried in old Confluence pages and closed PRs. For brownfield work specifically:
+- New team members (human or AI-assisted) can ask "why does this work this way" and get an answer grounded in the actual history — old PR discussions, design docs, related issues — not just the code as it stands today
+- Migration or modernization projects can use it to map out what a legacy component does and what depends on it before touching it, rather than relying on tribal knowledge
+- It surfaces *why* decisions were made (a Confluence ADR, an issue discussion) alongside *what* the code does today — context that's usually the first thing lost when a system goes brownfield
+
+This framing matters for how we prioritize beyond the MVP too: Confluence and issue/PR ingestion (currently in "Beyond MVP") are disproportionately valuable for the brownfield case specifically, since that's where the *why* lives that code alone can't tell you. Worth keeping in mind when deciding what to build next after the MVP milestone.
 
 ## Locked-in stack
 
@@ -24,7 +40,7 @@ Build an MCP-accessible retrieval system that indexes our codebase first, then e
 
 Build the thinnest possible end-to-end slice first — **GitHub code only, no Confluence, no reranking** — to validate that the architecture works before investing in every source type. This avoids a common failure mode: building all of ingestion, then all of chunking, then discovering at the very end that retrieval quality is poor and not knowing which layer caused it.
 
-This document covers that MVP slice in full detail (Phases 0–6 below). Everything beyond it — Confluence, GitHub issues/PRs, reranking, formal evaluation, and team rollout — is intentionally pushed to a single **"Beyond MVP"** section at the end, so the plan stays focused on what's actually being built first.
+This document covers that MVP slice in full detail (Phases 0–6 below). Everything beyond it — Confluence, GitHub issues/PRs, reranking, formal evaluation, and team rollout — is intentionally pushed to a single **"Beyond MVP"** section at the end. A stretch goal (blast-radius dependency analysis) is also tracked separately — see that section below.
 
 ```
 Phase 0 → Phase 1 → Phase 2 (GitHub code ingestion) →
@@ -139,6 +155,18 @@ Phase 5 (retrieval) → Phase 6 (MCP server)
 
 ---
 
+## Stretch goal — Blast radius (dependency graph)
+
+Not part of the MVP scope. Pursued only if time allows after the MVP milestone is hit, or picked up opportunistically if a phase finishes early.
+
+**What it is:** A structural import/call graph of the codebase (via `tree-sitter` + `networkx`) so Claude can answer "what depends on this file/function" — i.e. the blast radius of a change. This is deliberately *not* part of the RAG/vector pipeline: it's structural graph traversal, not semantic search, and it answers a different class of question than `search_knowledge_base` does. It would ship as an additional MCP tool, `get_blast_radius(file_or_symbol, depth?)`.
+
+**Why it's a stretch goal, not core MVP:** It's high-value — arguably more differentiated than code chunking, since it's the kind of structural analysis that neither grep nor vector search handles well — but it's a separate capability with its own build and validation work (~1.5–2 days), and the MVP's purpose is to validate the core retrieval architecture end to end first. Bolting on a second, unrelated capability risks delaying that validation.
+
+**If picked up:** rough scope would be — extract import/call edges per file during the Phase 3 tree-sitter pass, build a directed graph, persist it alongside the SQLite sync state, and implement a depth-limited traversal function. Worth flagging to Claude via the tool description that static analysis misses dynamic imports, reflection, and string-based routing, so results read as a strong approximation rather than a guarantee.
+
+---
+
 ## Beyond MVP (not detailed yet — for context only)
 
 Once the MVP milestone above is demoed and validated, the natural next additions, roughly in priority order:
@@ -166,5 +194,4 @@ Each of these deserves its own short scoping pass (goal, steps, definition of do
 | 6 — MCP server | 1.5–2 days |
 | **MVP total** | **~8–10 working days** |
 
-These are focused-work estimates, not elapsed calendar time — pad for context-switching if this isn't your only responsibility.
-
+These are focused-work estimates, not elapsed calendar time — pad for context-switching if this isn't your only responsibility. The stretch goal (blast radius, ~1.5–2 additional days) is not included in this total.
