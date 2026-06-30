@@ -168,6 +168,3 @@ Each of these deserves its own short scoping pass (goal, steps, definition of do
 
 These are focused-work estimates, not elapsed calendar time — pad for context-switching if this isn't your only responsibility.
 
-## What to show your team at the MVP milestone
-
-Once Phase 6 is done, you'll be able to demo: ask Claude Code a real question about your codebase, watch it call the search tool, and get a correctly-sourced answer with a link back to the file. That's the concrete proof point worth presenting before committing to the larger build-out listed under "Beyond MVP" above.
